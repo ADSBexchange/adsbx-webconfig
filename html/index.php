@@ -59,7 +59,7 @@
         			$receivername = file_get_contents("/tmp/webconfig/name");
         			$location = file_get_contents("/tmp/webconfig/location");
         		?>
-				 Receiver Name:
+				 Feeder Name:
 				<br />
 				<div class="alert alert-success min-adsb-width" role="alert">
 					<?php echo $receivername ?>

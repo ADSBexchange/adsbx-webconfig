@@ -49,10 +49,19 @@
 </head>
 
 <body class="container-margin">
+	<?php
+        	$receivername = file_get_contents("/tmp/webconfig/name");
+        	$location = file_get_contents("/tmp/webconfig/location");
+        	$uuid = file_get_contents('/boot/adsbx-uuid');
+        	$serialno = substr($uuid, 0, 8);
+	?>
+
+
 	<div class="container-sm">
 		<div class="d-grid gap-1 col-0 mx-auto">
 			<h4 class="adsbx-green logo-margin"><img src="img/adsbx-svg.svg" width="35"/>  ADSBexchange.com</h4>
-            <h6>version image <?php echo file_get_contents("/boot/adsbx-version"); ?><br>
+			 <h6>Feeder Serial Number: <?php echo $serialno; ?><br>
+            version image <?php echo file_get_contents("/boot/adsbx-version"); ?><br>
             version ADS-B software <?php echo file_get_contents("/boot/adsbx-version-decoder"); ?><br>
             version webconfig <?php echo file_get_contents("/boot/adsbx-version-webconfig"); ?></h6>
 			<?php

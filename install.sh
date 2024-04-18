@@ -40,6 +40,7 @@ cp ./leds.service /etc/systemd/system/
 rm -f /var/www/html/index.htm*
 cp -r ./html/* /var/www/html
 cp ./adsbx-config.nmconnection /etc/NetworkManager/system-connections/
+chmod 600 /etc/NetworkManager/system-connections/adsbx-config.nmconnection
 # cp ./dnsmasq.conf /etc/
 
 rm -rf $ipath/helpers

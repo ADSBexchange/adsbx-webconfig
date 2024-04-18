@@ -146,7 +146,7 @@ totalwait=0
 until [ $totalwait -gt 900 ]
 do
     ssid=$(wpa_cli status | grep ssid | grep -v bssid | cut -d "=" -f 2)
-    if [ "$ssid" = "ADSBx-config" ]; then
+    #if [ "$ssid" = "ADSBx-config" ]; then
         #ipset=$(ip address show dev wlan0 | grep "172.23.45.1")
 
         #if [ -z "$ipset" ]; then
@@ -157,7 +157,7 @@ do
         #if [[ ! -z "$clientip" ]]; then
         #    echo "Client lease detected at $clientip"
         #fi
-    fi
+    #fi
 
     if (( $totalwait > 30 )) && [[ "$ssid" != "ADSBx-config" ]]; then
         # if for some reason we can't enable the config network, bail.

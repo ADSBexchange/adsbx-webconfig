@@ -131,33 +131,19 @@ echo "On that device visit the URL http://adsbexchange.local in your browser" > 
 echo "Select a WiFi network / country / password for the Raspberry Pi to join" > /dev/tty1
 echo ------------- > /dev/tty1
 
-#netnum=$(wpa_cli list_networks | grep ADSBx-config | cut -f 1)
-#wpa_cli select_network $netnum
-#wpa_cli enable_network $netnum
+
 
 nmcli connection up adsbx-config
 
 # do the wifi can after selecting / enabling the config network as it can be unreliable otherwise
 wifi_scan
 
-#dnsmasq
 totalwait=0
 
 until [ $totalwait -gt 900 ]
 do
     ssid=$(wpa_cli status | grep ssid | grep -v bssid | cut -d "=" -f 2)
-    #if [ "$ssid" = "ADSBx-config" ]; then
-        #ipset=$(ip address show dev wlan0 | grep "172.23.45.1")
 
-        #if [ -z "$ipset" ]; then
-        #    ip address replace 172.23.45.1/24 dev wlan0; echo "setting wlan0 ip to 172.23.45.1/24"
-        #fi
-        #clientip=$(cat /tmp/webconfig/dnsmasq.leases | head -n 1 |  cut -d " " -f3)
-
-        #if [[ ! -z "$clientip" ]]; then
-        #    echo "Client lease detected at $clientip"
-        #fi
-    #fi
 
     if (( $totalwait > 30 )) && [[ "$ssid" != "ADSBx-config" ]]; then
         # if for some reason we can't enable the config network, bail.
@@ -177,13 +163,6 @@ if [[ "$ssid" == "ADSBx-config" ]]; then
     fi
 fi
 
-#kill $(cat /var/run/dnsmasq.pid)
-#sleep 1
-#killall dnsmasq #Make sure dnsmasq is off
-#sleep 2
-#pkill -9 dnsmasq # Make extra sure dnsmasq is off
-#ip address del 172.23.45.1/32 dev wlan0
-#wpa_cli disable $netnum
 
 nmcli connection down adsbx-config
 

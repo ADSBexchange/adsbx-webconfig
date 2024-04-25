@@ -51,7 +51,7 @@ $autogain = "# Adjust gain every 24 hours automatically?
 
 $enable_978 = "# Enable 978 UAT? (requires second SDR)";
 
-$zerotier = "# Allow ADSBexchange staff to access this unit remotely for troubleshooting via zerotier?";
+$zerotier = "# Allow ADSBexchange staff to access this unit remotely for troubleshooting?";
 
 $grafana = "# Run Graphana?";
 
@@ -60,7 +60,6 @@ $customleds = "# Use Custom LED Indications?";
 $mlat_marker = "# MLAT marker: Marker with random 5 mile offset on
 <a href=\"https://map.adsbexchange.com/mlat-map/\" target=\"_blank\">https://map.adsbexchange.com/mlat-map</a>";
 
-$zerotier_standalone = "# Enable zerotier service without remote support";
 
 $graphs1090 = "# Enable graphs1090?";
 

@@ -318,30 +318,7 @@ if (!empty($_POST["DUMP1090"])) {
                 echo '</tr></td><tr><td>';
             }
 
-           if ($key[0] == "ZEROTIER_STANDALONE") {
-                echo  str_replace('#','<br />',$zerotier_standalone."<br /><br />");
-                ?>
-                <select class="form-control" name="<?php echo $key[0]; ?>">
-                <?php
-                if(str_replace(array("\n", "\t", "\r"), '', strtoupper($key[1])) == "YES"){
-                ?>
-                    <option value="yes" selected>yes</option>
-                    <option value="no">no</option>
-                <?php
-                } else {
-                ?>
-                    <option value="yes">yes</option>
-                    <option value="no" selected>no</option>
-                <?php
-                }
-                ?>
-                </select>
-                <?php
-		if (file_exists('/boot/adsbx-hardware')) {
-                    echo "-->";
-                }
-                echo '</tr></td><tr><td>';
-            }
+
 
 			if ($key[0] == "PROMG") {
                                 echo  str_replace('#','<br />',$grafana."<br /><br />");

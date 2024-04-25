@@ -115,16 +115,6 @@ echo "<pre>$output</pre>";
 </td></tr>
 </table>
 
- <br>
- Zerotier Status:
-
-<table class="table table-dark"><tr><td>
-<?php
-$output = shell_exec('sudo /adsbexchange/webconfig/helpers/zerotier_status.sh | head -n 1');
-echo "<pre>$output</pre>";
-?>
-</td></tr>
-</table>
 
 <br>
  Uptime:
@@ -238,9 +228,6 @@ echo "<pre>$postotal</pre>";
 
 
 
-
-
-
  <br>
  Current WiFi Status:
 
@@ -252,6 +239,29 @@ echo "<pre>$output</pre>";
 </td></tr></table>
 
  <br>
+ Current GPS Status:
+
+<table class="table table-dark"><tr><td>
+<?php
+$output = shell_exec('sudo /adsbexchange/webconfig/helpers/journal.sh -u adsbexchange-gpsmon.service');
+echo "<pre>$output</pre>";
+?>
+</td></tr></table>
+
+ <br>
+ 
+ Remote Admin Status:
+
+<table class="table table-dark"><tr><td>
+<?php
+$output = shell_exec('sudo /adsbexchange/webconfig/helpers/journal.sh -u tailscaled.service');
+echo "<pre>$output</pre>";
+?>
+</td></tr>
+</table>
+
+<br>
+
  Current IP Status:
 
 <table class="table table-dark"><tr><td>

@@ -48,6 +48,13 @@ else
     services-handle disable leds
 fi
 
+if [[ $ZEROTIER == "no" ]];
+then
+    tailscale down
+else
+    tailscale up &
+fi
+
 # reset password when reset_password file is set
 if ls /boot | grep -qs '^reset_password'; then
     echo "Resetting user pi to default password!"

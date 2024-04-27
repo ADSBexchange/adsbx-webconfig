@@ -146,39 +146,50 @@ if (!empty($newssid) || !empty($newbssid)) {
     $newcountry = $_POST["wifiChooseCountry"];
     $newcountry = str_replace(array("\n", "\t", "\r"), '', $newcountry);
 
-    $content = '
-ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
-update_config=1
-country=' . $newcountry . '
-p2p_disabled=1
+$content = '[connection]
+id=adsbx-uiconfig
+uuid=3d7f4244-b630-3c45-8862-8dc5d2ab9fa3
+type=wifi
+autoconnect-priority=10
 
-network={
-    ssid="ADSBx-config"
-    disabled=1
-    mode=2
-    frequency=2432
-    key_mgmt=NONE
-}
-
-network={
-';
-
-    if (!empty($newssid)) {
+[wifi]
+mode=infrastructure';
+if (!empty($newssid)) {
         $content .= '
-    ssid="' . $newssid . '"';
+ssid=' . $newssid;
     } else {
         $content .= '
-    bssid=' . $newbssid;
+bssid=' . $newbssid;
     }
 
-$content .= '
-    scan_ssid=1
-    psk="' . $newpassword .'"
+// If Password is empty, don't print the wifi-security header in the config file - lets open networks function properly
+if (!empty($newpassword)) {
+        $content .= '
+
+[wifi-security]';
 }
+
+$content .= '
+key-mgmt=wpa-psk
+psk=' . $newpassword;
+
+
+$content .= '
+
+[ipv4]
+method=auto
+
+[ipv6]
+addr-gen-mode=default
+method=auto
+
+[proxy]
+
 
 ';
 
-    file_put_contents("/tmp/webconfig/wpa_supplicant.conf", $content);
+    file_put_contents("/tmp/webconfig/adsbx-uiconfig.nmconnection", $content);
+	file_put_contents("/tmp/webconfig/wificountry", $newcountry);
 
 ?>
     <script type="text/javascript">
@@ -220,7 +231,7 @@ $content .= '
 }
 ?>
     <h3>Choose WiFi Network:</h3>
-    (Note 1: 2.4GHz networks have longer range than 5.2GHz networks)<br /><br />
+    (Note 1: 2.4GHz networks have longer range than 5.8GHz networks)<br /><br />
     (Note 2: If the network name is not in the dropdown, please specify it)<br /><br />
         <div class="container col-8">
         <table  class="table table-striped table-hover table-dark">
@@ -232,10 +243,14 @@ $content .= '
             <input class="form-check-input" type="checkbox" id="ssidCheckbox" onclick="javascript:otherssidCheck('ssid');" />
             <label class="form-check-label">Specify Network name (SSID)&emsp;</label>
             <br />
-            <input class="form-check-input" type="checkbox" id="bssidCheckbox" onclick="javascript:otherssidCheck('bssid');" />
+			 
+            <input class="form-check-input" type="hidden" id="bssidCheckbox" onclick="javascript:otherssidCheck('bssid');" />
+			<!--
             <label class="form-check-label">Specify Network BSSID</label>
-
-            <br /><br />
+			removing BSSID functionality, rework at later time...
+			<br />
+			-->
+           <br /> 
 
             <div>
                 <select name="wifiChoose" class="custom-select custom-select-lg btn btn-secondary" id="wifiSelect">
@@ -272,13 +287,15 @@ $content .= '
 <?php
 $country_json = file_get_contents('country_codes.json');
 $country_codes = json_decode($country_json, true);
+$current_country = file_get_contents('/tmp/webconfig/wificountry');
 foreach($country_codes as [$code, $country]) {
-    if($code == 'UK'){
+    if($code == trim($current_country)){
         echo '<option value="'.$code.'" selected>'.$country.' - '.$code.'</option>';
     } else {
         echo '<option value="'.$code.'">'.$country.' - '.$code.'</option>';
     }
 }
+echo trim($current_country) . 'x' . $code;
 ?>
             </div>
         </select>

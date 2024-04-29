@@ -14,16 +14,16 @@ fi
 
 function on() {
   for led in "$@"; do
-    [[ $led == "green" ]] && led="led0"
-    [[ $led == "red" ]] && led="led1"
+    [[ $led == "green" ]] && led="ACT"
+    [[ $led == "red" ]] && led="PWR"
     echo 1 > "/sys/class/leds/$led/brightness"
   done
 }
 
 function off() {
   for led in "$@"; do
-    [[ $led == "green" ]] && led="led0"
-    [[ $led == "red" ]] && led="led1"
+    [[ $led == "green" ]] && led="ACT"
+    [[ $led == "red" ]] && led="PWR"
     echo 0 > "/sys/class/leds/$led/brightness"
   done
 }

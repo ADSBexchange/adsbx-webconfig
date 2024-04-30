@@ -60,10 +60,8 @@ then
     tailscale down
 else
     if [ -f "/var/lib/tailscale/tailscaled.state" ] && [ $(stat -c %s "/var/lib/tailscale/tailscaled.state") -gt 1024 ]; then
-                # Execute command A
                 tailscale up &
         else
-                # Execute command B
                 read -r line < /boot/adsbx-uuid; serialno=${line:0:8}
 
                 success=false

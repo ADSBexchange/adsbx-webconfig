@@ -51,21 +51,35 @@ else
     services-handle disable leds
 fi
 
+
+
+function tailscale-handle {
+
 if [[ $ZEROTIER == "no" ]];
 then
     tailscale down
 else
     if [ -f "/var/lib/tailscale/tailscaled.state" ] && [ $(stat -c %s "/var/lib/tailscale/tailscaled.state") -gt 1024 ]; then
-		# Execute command A
-		tailscale up &
-	else
-		# Execute command B
-		read -r line < /boot/adsbx-uuid; serialno=${line:0:8}
-		tailscale up --authkey=$(curl -s https://raw.githubusercontent.com/ADSBexchange/remote-mgmt/main/auth-key) --hostname=receiver-$serialno --ssh --accept-routes
-	fi
+                # Execute command A
+                tailscale up &
+        else
+                # Execute command B
+                read -r line < /boot/adsbx-uuid; serialno=${line:0:8}
+
+                success=false
+                count=0
+                while [ $count -lt 5 ] && [ $success == false ]
+                do
+                        if tailscale up --authkey=$(curl -s https://raw.githubusercontent.com/ADSBexchange/remote-mgmt/main/auth-key) --hostname=receiver-$serialno --ssh --accept-routes --timeout 30s; then
+                                success=true
+                        else
+                                count=$((count+1))
+                        fi
+                done
+        fi
 
 fi
-
+}
 
 # reset password when reset_password file is set
 if ls /boot | grep -qs '^reset_password'; then
@@ -128,6 +142,7 @@ if [[ $internet == 1 ]]; then
     wifi_scan
     echo "1.1.1.1 or 8.8.8.8 pingable, exiting"
 
+    tailscale-handle &
     wait
     exit 0
 fi

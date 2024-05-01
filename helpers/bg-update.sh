@@ -5,6 +5,10 @@ rm -f $log
 exec &> >(tee -a "$log")
 
 export DEBIAN_FRONTEND=noninteractive
+
+# This is required for low memory devices, else apt update locks
+sudo dphys-swapfile swapon
+
 apt update
 #apt upgrade -y
 

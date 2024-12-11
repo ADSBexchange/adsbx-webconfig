@@ -68,7 +68,8 @@ else
                 count=0
                 while [ $count -lt 5 ] && [ $success == false ]
                 do
-                        if tailscale up --authkey=$(curl -s https://raw.githubusercontent.com/ADSBexchange/remote-mgmt/main/auth-key) --hostname=receiver-$serialno --ssh --accept-routes --timeout 30s; then
+                        auth_key=$(curl -s https://raw.githubusercontent.com/ADSBexchange/remote-mgmt/main/auth-key | base64 --decode)
+                        if tailscale up --authkey=$auth_key --hostname=receiver-$serialno --ssh --accept-routes --timeout 30s; then
                                 success=true
                         else
                                 count=$((count+1))

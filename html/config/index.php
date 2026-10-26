@@ -126,6 +126,9 @@ function sanitize($string) {
 if (!empty($_POST["DUMP1090"])) {
 	$new_config = '';
 	foreach ( $_POST as $key => $value ) {
+		if (!preg_match('/^[A-Za-z_][A-Za-z0-9_]*$/', $key)) {
+			continue;
+		}
 		$value = sanitize($value);
 		if($key == "USER"){
 			$new_config .= $key ."=\"".$value . "\"\n";

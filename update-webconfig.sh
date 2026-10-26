@@ -24,6 +24,16 @@ git clone --depth 1 https://github.com/ADSBexchange/adsbx-webconfig.git $updir
 cd $updir
 bash install.sh dont_reset_config
 
+# pick up Debian security updates for the installed PHP release
+php_packages=$(dpkg-query -W -f='${db:Status-Abbrev} ${Package}\n' 'php*' 2>/dev/null | awk '$1 == "ii" {print $2}')
+if [[ -n "$php_packages" ]]; then
+    if apt-get install -y --only-upgrade --no-install-recommends $php_packages \
+        || { apt update && apt-get install -y --only-upgrade --no-install-recommends $php_packages; }; then
+        systemctl restart lighttpd
+    else
+        echo "WARNING: PHP package upgrade failed, continuing"
+    fi
+fi
 
 cd /tmp
 rm -rf $updir

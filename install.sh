@@ -7,6 +7,17 @@ fi
 
 trap 'echo "[ERROR] Error in line $LINENO when executing: $BASH_COMMAND"' ERR
 
+# images without NetworkManager use the wpa_supplicant web UI from the legacy branch
+if ! command -v nmcli >/dev/null 2>&1; then
+    legacydir=/tmp/update-webconfig-legacy
+    rm -rf "$legacydir"
+    if git clone --quiet --depth 1 -b legacy https://github.com/ADSBexchange/adsbx-webconfig.git "$legacydir"; then
+        cd "$legacydir" && exec bash ./install.sh "$@"
+    fi
+    echo "Could not fetch the legacy webconfig, keeping the installed version."
+    exit 1
+fi
+
 function aptInstall() {
     if ! apt install -y --no-install-recommends --no-install-suggests "$@"; then
         apt update

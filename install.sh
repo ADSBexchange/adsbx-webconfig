@@ -8,7 +8,7 @@ fi
 trap 'echo "[ERROR] Error in line $LINENO when executing: $BASH_COMMAND"' ERR
 
 # images without NetworkManager use the wpa_supplicant web UI from the legacy branch
-if ! command -v nmcli >/dev/null 2>&1; then
+if ! systemctl is-enabled NetworkManager.service >/dev/null 2>&1; then
     legacydir=/tmp/update-webconfig-legacy
     rm -rf "$legacydir"
     if git clone --quiet --depth 1 -b legacy https://github.com/ADSBexchange/adsbx-webconfig.git "$legacydir"; then

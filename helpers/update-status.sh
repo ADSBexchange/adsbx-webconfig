@@ -54,7 +54,7 @@ components+=("$(component mlat-client "mlat-client" "${mlat_version:-unknown}${m
 
 tar1090_dir=/usr/local/share/tar1090/git
 tar1090_ref=$(git -C "$tar1090_dir" rev-parse HEAD 2>/dev/null)
-tar1090_date=$(git -C "$tar1090_dir" log -1 --format=%cs 2>/dev/null)
+tar1090_date=$(git -C "$tar1090_dir" log -1 --date=short --format=%cd 2>/dev/null)
 tar1090_url=$(git -C "$tar1090_dir" remote get-url origin 2>/dev/null)
 tar1090_url=${tar1090_url:-https://github.com/wiedehopf/tar1090}
 tar1090_branch=$(git -C "$tar1090_dir" rev-parse --abbrev-ref HEAD 2>/dev/null)

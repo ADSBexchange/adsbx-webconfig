@@ -19,6 +19,14 @@ if ! [[ -f /boot/adsbx-version ]]; then
 fi
 
 aptInstall whois php php-common php-fpm php-cgi dnsmasq
+
+# pick up the latest available builds of the installed PHP and lighttpd packages
+packages=$(dpkg-query -W -f='${db:Status-Abbrev} ${Package}\n' 'php*' lighttpd 2>/dev/null | awk '$1 == "ii" {print $2}')
+if [[ -n "$packages" ]]; then
+    apt-get install -y --only-upgrade --no-install-recommends $packages \
+        || { apt update && apt-get install -y --only-upgrade --no-install-recommends $packages; } \
+        || echo "WARNING: package upgrade failed, continuing"
+fi
 command -v rsyslogd &>/dev/null && apt remove -y rsyslog || true
 
 lighttpd-enable-mod fastcgi-php 2>&1 | grep -F -v -e 'force-reload'

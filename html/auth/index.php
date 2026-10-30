@@ -333,6 +333,77 @@ if ($_SESSION['authenticated'] == 1) {
     <p>
 
     <hr width="50%">
+    <h5>Software</h5>
+    <?php
+    $status = json_decode((string) shell_exec('sudo /adsbexchange/webconfig/helpers/update-status.sh 2>/dev/null'), true);
+    if (is_array($status) && isset($status['components'])) {
+        echo '<p class="mb-1">' . htmlspecialchars((string) $status['os']) . ', image ' . htmlspecialchars((string) $status['image']) . '</p>';
+        echo '<table class="table table-sm" id="software-table"><thead><tr><th>Component</th><th>Installed</th><th>Available</th><th>Status</th></tr></thead><tbody>';
+        foreach ($status['components'] as $c) {
+            echo '<tr data-id="' . htmlspecialchars((string) $c['id']) . '"><td>' . htmlspecialchars((string) $c['name']) . '</td>'
+               . '<td>' . htmlspecialchars((string) ($c['installed'] !== '' ? $c['installed'] : 'unknown')) . '</td>'
+               . '<td class="available">-</td><td class="status">-</td></tr>';
+        }
+        echo '</tbody></table>';
+    } else {
+        echo '<p>Software status is not available.</p>';
+    }
+
+    $last = @file_get_contents('/adsbexchange/update-result.json');
+    $last = $last ? json_decode($last, true) : null;
+    if (is_array($last) && isset($last['finished'])) {
+        echo '<p class="mb-1">Last update: ' . htmlspecialchars(substr((string) $last['finished'], 0, 16))
+           . ($last['result'] === 'ok' ? ' (completed)' : ' (did not complete, see the update log on the info page)') . '</p>';
+        if (isset($last['before']['components']) && isset($last['after']['components'])) {
+            $before = array();
+            foreach ($last['before']['components'] as $c) {
+                $before[$c['id']] = (string) $c['installed'];
+            }
+            $changes = array();
+            foreach ($last['after']['components'] as $c) {
+                $was = isset($before[$c['id']]) ? $before[$c['id']] : '';
+                if ($was !== (string) $c['installed']) {
+                    $changes[] = htmlspecialchars((string) $c['name']) . ': ' . htmlspecialchars($was !== '' ? $was : 'none')
+                               . ' &rarr; ' . htmlspecialchars((string) $c['installed']);
+                }
+            }
+            echo $changes ? '<ul class="mb-1"><li>' . implode('</li><li>', $changes) . '</li></ul>' : '<p class="mb-1">No component changed.</p>';
+        }
+    }
+    ?>
+    <p>
+    <button type="button" class="btn btn-secondary" id="check-updates" onclick="checkUpdates()">Check for updates</button>
+    <span id="check-result"></span>
+    <script type="text/javascript">
+    function checkUpdates() {
+        var btn = document.getElementById('check-updates');
+        var out = document.getElementById('check-result');
+        var labels = {'up-to-date': ['success', 'Up to date'], 'update-available': ['warning', 'Update available'], 'unknown': ['secondary', 'Unknown']};
+        btn.disabled = true;
+        out.textContent = ' Checking...';
+        fetch('update-status.php?check=1', {cache: 'no-store'}).then(function (r) {
+            return r.json();
+        }).then(function (s) {
+            var pending = 0;
+            (s.components || []).forEach(function (c) {
+                var row = document.querySelector('#software-table tr[data-id="' + c.id + '"]');
+                if (!row) { return; }
+                var ref = c.available_ref || '';
+                row.querySelector('.available').textContent = ref === '' ? 'unknown' : (/^[0-9a-f]{40}$/.test(ref) ? ref.substring(0, 7) : ref);
+                var l = labels[c.status] || labels['unknown'];
+                row.querySelector('.status').innerHTML = '<span class="badge bg-' + l[0] + '">' + l[1] + '</span>';
+                if (c.status === 'update-available') { pending++; }
+            });
+            out.textContent = pending ? ' Updates are available for ' + pending + ' component(s). Press Update Feeder to install them.' : ' Everything is up to date.';
+        }).catch(function () {
+            out.textContent = ' Could not check for updates. Is the feeder online?';
+        }).finally(function () {
+            btn.disabled = false;
+        });
+    }
+    </script>
+    </p>
+
     <form method='POST' name="update" action="." onSubmit = "return confirm('Update the feeder?')">
     <input type="hidden" id="update" name="update" value="update">
     <input type="submit" class="btn btn-primary" value="Update Feeder">

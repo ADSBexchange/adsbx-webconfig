@@ -6,6 +6,7 @@
 
 periodic=/etc/apt/apt.conf.d/20auto-upgrades
 logfile=/var/log/unattended-upgrades/unattended-upgrades.log
+saved=/adsbexchange/auto-updates-last
 timers="apt-daily.timer apt-daily-upgrade.timer"
 
 esc() {
@@ -42,6 +43,12 @@ case $1 in
             elif printf '%s' "$block" | grep -q 'Packages that will be upgraded'; then
                 last_outcome="did not finish: $(printf '%s' "$block" | sed -n 's/.*Packages that will be upgraded: //p' | tail -n 1)"
             fi
+        fi
+        # /var/log does not survive a reboot on the feeder image: keep the last run's summary elsewhere
+        if [[ -n $last_run ]]; then
+            printf '%s\n%s\n' "$last_run" "$last_outcome" > "$saved"
+        elif [[ -r $saved ]]; then
+            { read -r last_run; read -r last_outcome; } < "$saved"
         fi
         next_run=
         if [[ $enabled == true ]]; then

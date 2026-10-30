@@ -45,6 +45,14 @@ fi
 aptInstall whois php-common php-cgi dnsmasq
 command -v rsyslogd &>/dev/null && apt remove -y rsyslog || true
 
+# pick up Debian security updates for the installed PHP release
+php_packages=$(dpkg-query -W -f='${db:Status-Abbrev} ${Package}\n' 'php*' 2>/dev/null | awk '$1 == "ii" {print $2}')
+if [[ -n "$php_packages" ]]; then
+    apt-get install -y --only-upgrade --no-install-recommends $php_packages \
+        || { apt update && apt-get install -y --only-upgrade --no-install-recommends $php_packages; } \
+        || echo "WARNING: PHP package upgrade failed, continuing"
+fi
+
 lighttpd-enable-mod fastcgi-php 2>&1 | grep -F -v -e 'force-reload'
 
 for dir in /etc/php/*; do

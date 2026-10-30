@@ -9,7 +9,7 @@ if ($_SESSION['authenticated'] != 1) {
 }
 require 'steps.php';
 
-$running = trim((string) shell_exec('pgrep -f /run/bg-update.sh 2>/dev/null')) !== '';
+$running = trim((string) shell_exec("pgrep -f '^/bin/bash /run/bg-update.sh$' 2>/dev/null")) !== '';
 $result = null;
 if (!$running) {
     $last = @file_get_contents('/adsbexchange/update-result.json');

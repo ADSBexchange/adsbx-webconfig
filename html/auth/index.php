@@ -268,6 +268,13 @@ if (!empty($_POST["newpassword1"])) {
      }
  }
 
+//Handle the automatic security updates switch
+ if (!empty($_POST["autoupdates"])) {
+     if ($_SESSION['authenticated'] == 1 && in_array($_POST["autoupdates"], array('enable', 'disable'))) {
+        exec('sudo /adsbexchange/webconfig/helpers/auto-updates.sh ' . $_POST["autoupdates"] . ' > /dev/null 2>&1');
+     }
+ }
+
 //Handle setdefaults request
  if (!empty($_POST["setdefaults"])) {
      if ($_SESSION['authenticated'] == 1) {
@@ -442,6 +449,25 @@ if ($_SESSION['authenticated'] == 1) {
     }
     </script>
     </p>
+    <?php
+    $auto = json_decode((string) shell_exec('sudo /adsbexchange/webconfig/helpers/auto-updates.sh status 2>/dev/null'), true);
+    if (is_array($auto) && !empty($auto['installed'])) {
+        $on = !empty($auto['enabled']);
+        echo '<p class="mb-1">Automatic security updates: <span class="badge bg-' . ($on ? 'success' : 'secondary') . '">' . ($on ? 'On' : 'Off') . '</span></p>';
+        echo '<p class="mb-1 small">When on, Debian security updates for the operating system packages are installed daily without a reboot. '
+           . 'Kernel, firmware and network packages are never changed this way, and the feeder software still updates with the button below.</p>';
+        if (!empty($auto['last_run'])) {
+            echo '<p class="mb-1 small">Last run: ' . htmlspecialchars((string) $auto['last_run'])
+               . ($auto['last_outcome'] !== '' ? ', ' . htmlspecialchars((string) $auto['last_outcome']) : '') . '</p>';
+        }
+        if ($on && !empty($auto['next_run'])) {
+            echo '<p class="mb-1 small">Next check: ' . htmlspecialchars((string) $auto['next_run']) . '</p>';
+        }
+        echo '<form method="POST" action="."><input type="hidden" name="autoupdates" value="' . ($on ? 'disable' : 'enable') . '">'
+           . '<input type="submit" class="btn btn-secondary btn-sm" value="' . ($on ? 'Turn off automatic security updates' : 'Turn on automatic security updates') . '"></form>';
+    }
+    ?>
+    <p>
 
     <form method='POST' name="update" action="." onSubmit = "return confirm('Update the feeder?')">
     <input type="hidden" id="update" name="update" value="update">

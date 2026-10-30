@@ -77,7 +77,7 @@ update_ref=$(git -C /adsbexchange/update rev-parse HEAD 2>/dev/null)
 update_url=https://github.com/ADSBexchange/adsbx-update.git
 components+=("$(component adsbx-update "Update scripts" "${update_ref:0:7}" "$update_ref" "$(remote "$update_url" HEAD)" "$update_url")")
 
-for pkg in php*-cgi lighttpd; do
+for pkg in 'php[0-9]*-cgi' lighttpd; do
     name=$(dpkg-query -W -f='${Package}\n' "$pkg" 2>/dev/null | head -n 1)
     [[ -n $name ]] || continue
     installed=$(dpkg-query -W -f='${Version}' "$name" 2>/dev/null)

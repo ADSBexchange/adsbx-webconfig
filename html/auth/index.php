@@ -457,8 +457,15 @@ if ($_SESSION['authenticated'] == 1) {
         echo '<p class="mb-1 small">When on, Debian security updates for the operating system packages are installed daily without a reboot. '
            . 'Kernel, firmware and network packages are never changed this way, and the feeder software still updates with the button below.</p>';
         if (!empty($auto['last_run'])) {
+            $outcome = (string) $auto['last_outcome'];
+            if (preg_match('/^(installed|did not finish): (.*)$/', $outcome, $m)) {
+                $packages = preg_split('/\s+/', trim($m[2]));
+                if (count($packages) > 8) {
+                    $outcome = $m[1] . ': ' . implode(' ', array_slice($packages, 0, 8)) . ' and ' . (count($packages) - 8) . ' more';
+                }
+            }
             echo '<p class="mb-1 small">Last run: ' . htmlspecialchars((string) $auto['last_run'])
-               . ($auto['last_outcome'] !== '' ? ', ' . htmlspecialchars((string) $auto['last_outcome']) : '') . '</p>';
+               . ($outcome !== '' ? ', ' . htmlspecialchars($outcome) : '') . '</p>';
         }
         if ($on && !empty($auto['next_run'])) {
             echo '<p class="mb-1 small">Next check: ' . htmlspecialchars((string) $auto['next_run']) . '</p>';

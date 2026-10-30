@@ -218,6 +218,9 @@ if (!empty($_POST["newpassword1"])) {
      if ($_SESSION['authenticated'] == 1) {
 
         ?>
+        <!-- Progress -->
+        <table class="table table-sm" id="steps-table" style="display: none;"><thead><tr><th>Step</th><th>Status</th><th></th></tr></thead><tbody></tbody></table>
+        <p id="steps-summary"></p>
         <!-- Output Window -->
         <table><tr><td>
         <pre>
@@ -225,12 +228,34 @@ if (!empty($_POST["newpassword1"])) {
         </pre>
         </td></tr></table>
         <script type="text/javascript">
+        var updateSeen = false;
         function poll(){
-            $("show-update-log.php", function(data){
-                $("#output_container").load('./show-update-log.php');
-            });
+            $("#output_container").load('./show-update-log.php');
+            fetch('update-steps.php', {cache: 'no-store'}).then(function (r) {
+                return r.json();
+            }).then(function (s) {
+                // until the update process has been seen, the log and result belong to the previous run
+                if (s.running) { updateSeen = true; }
+                if (!updateSeen) { return; }
+                var labels = {running: ['primary', 'Running'], ok: ['success', 'Done'], failed: ['danger', 'Failed']};
+                var tbody = document.querySelector('#steps-table tbody');
+                tbody.innerHTML = '';
+                (s.steps || []).forEach(function (st) {
+                    var l = labels[st.state] || ['secondary', st.state];
+                    var tr = document.createElement('tr');
+                    tr.innerHTML = '<td></td><td><span class="badge bg-' + l[0] + '">' + l[1] + '</span></td><td></td>';
+                    tr.children[0].textContent = st.label;
+                    tr.children[2].textContent = st.message || '';
+                    tbody.appendChild(tr);
+                });
+                document.getElementById('steps-table').style.display = s.steps && s.steps.length ? '' : 'none';
+                var summary = '';
+                if (!s.running && s.result === 'failed') { summary = 'The update did not complete and the feeder has not rebooted. See the errors in the log below.'; }
+                if (!s.running && s.result === 'ok') { summary = 'Update complete, rebooting.'; }
+                document.getElementById('steps-summary').textContent = summary;
+            }).catch(function () {});
         }
-        setInterval(poll, 500);
+        setInterval(poll, 1000);
         </script>
         <?php
         ob_end_flush();
@@ -372,6 +397,20 @@ if ($_SESSION['authenticated'] == 1) {
                 }
             }
             echo $changes ? '<ul class="mb-1"><li>' . implode('</li><li>', $changes) . '</li></ul>' : '<p class="mb-1">No component changed.</p>';
+        }
+        if (isset($last['markers']) && is_array($last['markers'])) {
+            require_once __DIR__ . '/steps.php';
+            $steps = parse_update_steps($last['markers'], true);
+            if ($steps) {
+                $badges = array('ok' => array('success', 'Done'), 'failed' => array('danger', 'Failed'), 'running' => array('secondary', 'Started'));
+                echo '<table class="table table-sm"><tbody>';
+                foreach ($steps as $st) {
+                    $b = isset($badges[$st['state']]) ? $badges[$st['state']] : array('secondary', $st['state']);
+                    echo '<tr><td>' . htmlspecialchars($st['label']) . '</td><td><span class="badge bg-' . $b[0] . '">' . $b[1] . '</span></td>'
+                       . '<td>' . htmlspecialchars((string) $st['message']) . '</td></tr>';
+                }
+                echo '</tbody></table>';
+            }
         }
     }
     ?>

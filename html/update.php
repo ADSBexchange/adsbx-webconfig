@@ -1,3 +1,11 @@
+<?php
+session_start();
+if ($_SESSION['authenticated'] != 1) {
+	$_SESSION['auth_URI'] = $_SERVER['REQUEST_URI'];
+	header("Location: auth/");
+	exit;
+}
+?>
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">

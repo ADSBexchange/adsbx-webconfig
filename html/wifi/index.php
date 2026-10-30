@@ -60,6 +60,7 @@ session_start();
 if ($_SESSION['authenticated'] != 1) {
     $_SESSION['auth_URI'] = $_SERVER['REQUEST_URI'];
     header("Location: ../auth/");
+    exit;
 }
 ?>
 
@@ -141,7 +142,9 @@ if(isset($_POST['wifiChoose'])) {
 if (!empty($newssid) || !empty($newbssid)) {
 
     $newpassword = $_POST["wifipassword"];
+    $newpassword = str_replace(array("\n", "\t", "\r"), '', $newpassword);
     $newssid = str_replace(array("\n", "\t", "\r"), '', $newssid);
+    $newbssid = str_replace(array("\n", "\t", "\r"), '', $newbssid);
 
     $newcountry = $_POST["wifiChooseCountry"];
     $newcountry = str_replace(array("\n", "\t", "\r"), '', $newcountry);

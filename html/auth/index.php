@@ -237,7 +237,7 @@ if (!empty($_POST["newpassword1"])) {
         flush();
         exec('sudo /adsbexchange/webconfig/helpers/run-update.sh > /dev/null 2>&1 &');
         ?>
-        <br />System will reboot when complete... log will be viewable at the bottom of the info page after the reboot.</center></body></html>
+        <br />System will reboot when complete... log will be viewable at the bottom of the info page after the reboot.<br />If the update fails, the system does not reboot and the errors are shown above.</center></body></html>
         <?php
         exit;
      }

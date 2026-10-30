@@ -90,7 +90,7 @@ function sanitize($string) {
 	echo 'Setting the following values:<br>';
 
 	foreach ( $_POST as $key => $value ) {
-		echo $key . ': ' . $value;
+		echo htmlspecialchars($key) . ': ' . htmlspecialchars($value);
 		echo '<br>';
 	}
 	 

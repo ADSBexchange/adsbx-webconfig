@@ -42,17 +42,23 @@ if ! [[ -f /boot/adsbx-version ]]; then
     echo 8.0123456789 > /boot/adsbx-version
 fi
 
-aptInstall whois php php-common php-fpm php-cgi dnsmasq
+aptInstall whois php-common php-cgi dnsmasq
 command -v rsyslogd &>/dev/null && apt remove -y rsyslog || true
 
 lighttpd-enable-mod fastcgi-php 2>&1 | grep -F -v -e 'force-reload'
+
+for dir in /etc/php/*; do
+    echo -e "; Put session info here, to prevent SD card writes\nsession.save_path = \"/tmp\"" > "$dir/cgi/conf.d/30-session_path.ini" || true
+    echo -e "session.cookie_httponly = 1\nsession.cookie_samesite = Lax\nsession.use_strict_mode = 1\nexpose_php = Off" > "$dir/cgi/conf.d/40-webconfig.ini" || true
+done
 
 systemctl restart lighttpd
 systemctl disable dnsmasq &>/dev/null
 systemctl stop dnsmasq || true
 
-for dir in /etc/php/*; do
-    echo -e "; Put session info here, to prevent SD card writes\nsession.save_path = \"/tmp\"" > "$dir/cgi/conf.d/30-session_path.ini" || true
+# lighttpd runs php-cgi itself; php-fpm is not used
+for unit in $(systemctl list-unit-files 'php*-fpm.service' --no-legend | awk '{print $1}'); do
+    systemctl disable --now "$unit" || true
 done
 
 ipath=/adsbexchange/webconfig

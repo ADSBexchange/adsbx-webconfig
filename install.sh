@@ -44,6 +44,13 @@ cp ./dnsmasq.conf /etc/
 rm -rf $ipath/helpers
 cp -r -T ./helpers $ipath/helpers
 chmod a+x $ipath/helpers/*.sh
+
+# record which checkout is installed, for the software status on the update page
+{
+    echo "branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo unknown)"
+    echo "commit=$(git rev-parse HEAD 2>/dev/null || echo unknown)"
+    echo "installed=$(date -Is)"
+} > $ipath/version
 cp ./010_www-data /etc/sudoers.d/
 for file in helpers/*.sh; do
     echo "www-data ALL = NOPASSWD: /adsbexchange/webconfig/$file" >> /etc/sudoers.d/010_www-data

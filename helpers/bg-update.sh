@@ -6,10 +6,20 @@ exec &> >(tee -a "$log")
 
 export DEBIAN_FRONTEND=noninteractive
 
+# progress markers read by the web UI: "== step <id> <start|ok|failed> (<time>)[: <message>]"
+step() {
+    echo "== step $1 $2 ($(date +%H:%M:%S))${3:+: $3}"
+}
+
 # This is required for low memory devices, else apt update locks
 sudo dphys-swapfile swapon
 
-apt update
+step apt-update start
+if apt update; then
+    step apt-update ok
+else
+    step apt-update failed
+fi
 #apt upgrade -y
 
 # software status before and after, shown on the update page as "last update"
@@ -18,25 +28,32 @@ result_file=/adsbexchange/update-result.json
 started=$(date -Is)
 before=$("$status_helper" 2>/dev/null)
 write_result() {
-    local after
+    local after markers
     after=$("$status_helper" 2>/dev/null)
-    printf '{"started":"%s","finished":"%s","result":"%s","before":%s,"after":%s}\n' \
-        "$started" "$(date -Is)" "$1" "${before:-null}" "${after:-null}" > "$result_file"
+    markers=$(grep '^== step ' "$log" | sed 's/\\/\\\\/g; s/"/\\"/g' | awk '{printf "%s\"%s\"", (NR > 1 ? "," : ""), $0}')
+    printf '{"started":"%s","finished":"%s","result":"%s","before":%s,"after":%s,"markers":[%s]}\n' \
+        "$started" "$(date -Is)" "$1" "${before:-null}" "${after:-null}" "$markers" > "$result_file"
 }
 
 failed=0
-for url in \
-    https://raw.githubusercontent.com/ADSBexchange/adsbx-update/main/update-adsbx.sh \
-    https://raw.githubusercontent.com/ADSBexchange/adsbx-webconfig/master/update-webconfig.sh
-do
-    if ! script="$(wget -nv -O - "$url")" || [[ -z "$script" ]]; then
-        echo "UPDATE ERROR: download failed: $url"
+# run_script <step-id> <url>: downloads the script and runs it; a failed download or run marks the update failed
+run_script() {
+    local script
+    step "$1" start
+    if ! script="$(wget -nv -O - "$2")" || [[ -z "$script" ]]; then
+        echo "UPDATE ERROR: download failed: $2"
+        step "$1" failed "download failed"
         failed=1
     elif ! bash -c "$script"; then
-        echo "UPDATE ERROR: script failed: $url"
+        echo "UPDATE ERROR: script failed: $2"
+        step "$1" failed "script failed"
         failed=1
+    else
+        step "$1" ok
     fi
-done
+}
+run_script feed-software https://raw.githubusercontent.com/ADSBexchange/adsbx-update/main/update-adsbx.sh
+run_script web-ui https://raw.githubusercontent.com/ADSBexchange/adsbx-webconfig/master/update-webconfig.sh
 
 if [[ $failed != 0 ]]; then
     write_result failed
@@ -45,6 +62,7 @@ if [[ $failed != 0 ]]; then
 fi
 
 write_result ok
+step reboot start
 echo "rebooting..."
 sleep 5
 reboot now

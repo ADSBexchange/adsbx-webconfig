@@ -7,15 +7,28 @@ fi
 
 trap 'echo "[ERROR] Error in line $LINENO when executing: $BASH_COMMAND"' ERR
 
-# images without NetworkManager use the wpa_supplicant web UI from the legacy branch
-if ! systemctl is-enabled NetworkManager.service >/dev/null 2>&1; then
-    legacydir=/tmp/update-webconfig-legacy
-    rm -rf "$legacydir"
-    if git clone --quiet --depth 1 -b legacy https://github.com/ADSBexchange/adsbx-webconfig.git "$legacydir"; then
-        cd "$legacydir" && exec bash ./install.sh "$@"
+# Devices fetch this file from master on every update. The web UI they install comes from a
+# release branch chosen here; see CONTRIBUTING.md. WEBCONFIG_DISPATCH=no installs this checkout
+# instead (set by the hand-off below, and used for tests and image builds of a branch).
+if [[ ${WEBCONFIG_DISPATCH:-yes} != no ]]; then
+    codename=$(. /etc/os-release 2>/dev/null; echo "${VERSION_CODENAME:-unknown}")
+    if systemctl is-enabled NetworkManager.service >/dev/null 2>&1; then nm=yes; else nm=no; fi
+    case "$codename:$nm" in
+        buster:no|bullseye:no) line=release/8.x ;;
+        bookworm:yes)          line=release/9.x ;;
+        *)
+            echo "No web UI release matches this system (os=$codename, networkmanager=$nm); keeping the installed version."
+            exit 1 ;;
+    esac
+    linedir=/tmp/update-webconfig-${line##*/}
+    rm -rf "$linedir"
+    if ! git clone --quiet --depth 1 -b "$line" https://github.com/ADSBexchange/adsbx-webconfig.git "$linedir"; then
+        echo "Could not fetch $line; keeping the installed version."
+        exit 1
     fi
-    echo "Could not fetch the legacy webconfig, keeping the installed version."
-    exit 1
+    cd "$linedir" && WEBCONFIG_DISPATCH=no bash ./install.sh "$@" && rc=0 || rc=$?
+    cd / && rm -rf "$linedir"
+    exit "$rc"
 fi
 
 function aptInstall() {

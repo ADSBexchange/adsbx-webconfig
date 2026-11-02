@@ -75,7 +75,7 @@ components+=("$(component webconfig "Web UI" "${webconfig_ref:+${webconfig_branc
 
 update_ref=$(git -C /adsbexchange/update rev-parse HEAD 2>/dev/null)
 update_url=https://github.com/ADSBexchange/adsbx-update.git
-components+=("$(component adsbx-update "Update scripts" "${update_ref:0:7}" "$update_ref" "$(remote "$update_url" HEAD)" "$update_url")")
+components+=("$(component adsbx-update "Update scripts" "${update_ref:0:7}" "$update_ref" "$(remote "$update_url" refs/heads/release/8.x)" "$update_url release/8.x")")
 
 for pkg in 'php[0-9]*-cgi' lighttpd; do
     name=$(dpkg-query -W -f='${Package}\n' "$pkg" 2>/dev/null | head -n 1)

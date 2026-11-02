@@ -19,7 +19,9 @@ case $1 in
     enable)
         printf 'APT::Periodic::Update-Package-Lists "1";\nAPT::Periodic::Unattended-Upgrade "1";\n' > "$periodic"
         systemctl unmask $timers >/dev/null 2>&1 || true
-        systemctl enable --now $timers
+        systemctl enable $timers
+        # starting fails inside an image build chroot; the enabled timers start at boot
+        systemctl start $timers 2>/dev/null || true
         ;;
     disable)
         printf 'APT::Periodic::Update-Package-Lists "0";\nAPT::Periodic::Unattended-Upgrade "0";\n' > "$periodic"

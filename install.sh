@@ -85,7 +85,8 @@ rm -rf $ipath/helpers
 cp -r -T ./helpers $ipath/helpers
 chmod a+x $ipath/helpers/*.sh
 
-# automatic security updates: installed and configured here, enabled only from the update page
+# automatic security updates: installed and configured here; switched off the first time an existing
+# feeder installs this, switched on by the image build for new images, changed from the update page
 first_auto_updates=no
 [[ -f /etc/apt/apt.conf.d/52-adsbx-unattended-upgrades ]] || first_auto_updates=yes
 aptInstall unattended-upgrades
@@ -109,6 +110,7 @@ Unattended-Upgrade::MinimalSteps "true";
 Unattended-Upgrade::Remove-Unused-Dependencies "false";
 Unattended-Upgrade::Remove-New-Unused-Dependencies "false";
 Unattended-Upgrade::Remove-Unused-Kernel-Packages "false";
+APT::Periodic::AutocleanInterval "1";
 EOF
 if [[ $first_auto_updates == yes ]]; then
     bash $ipath/helpers/auto-updates.sh disable

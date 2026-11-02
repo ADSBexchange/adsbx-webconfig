@@ -216,7 +216,15 @@ if (!empty($_POST["newpassword1"])) {
 //Handle update request
  if (!empty($_POST["update"])) {
      if ($_SESSION['authenticated'] == 1) {
-
+        // components ticked on the form; everything when all or none are ticked
+        $allowed = array('readsb', 'mlat-client', 'tar1090', 'web-ui');
+        $selected = isset($_POST['components']) && is_array($_POST['components']) ? array_values(array_intersect($allowed, $_POST['components'])) : array();
+        @mkdir('/tmp/webconfig', 0755, true);
+        if ($selected && count($selected) < count($allowed)) {
+            file_put_contents('/tmp/webconfig/update-components', implode(',', $selected) . "\n");
+        } else {
+            @unlink('/tmp/webconfig/update-components');
+        }
         ?>
         <!-- Progress -->
         <table class="table table-sm" id="steps-table" style="display: none;"><thead><tr><th>Step</th><th>Status</th><th></th></tr></thead><tbody></tbody></table>
@@ -237,7 +245,7 @@ if (!empty($_POST["newpassword1"])) {
                 // until the update process has been seen, the log and result belong to the previous run
                 if (s.running) { updateSeen = true; }
                 if (!updateSeen) { return; }
-                var labels = {running: ['primary', 'Running'], ok: ['success', 'Done'], failed: ['danger', 'Failed']};
+                var labels = {running: ['primary', 'Running'], ok: ['success', 'Done'], failed: ['danger', 'Failed'], skipped: ['secondary', 'Skipped']};
                 var tbody = document.querySelector('#steps-table tbody');
                 tbody.innerHTML = '';
                 (s.steps || []).forEach(function (st) {
@@ -405,7 +413,7 @@ if ($_SESSION['authenticated'] == 1) {
             require_once __DIR__ . '/steps.php';
             $steps = parse_update_steps($last['markers'], true);
             if ($steps) {
-                $badges = array('ok' => array('success', 'Done'), 'failed' => array('danger', 'Failed'), 'running' => array('secondary', 'Started'));
+                $badges = array('ok' => array('success', 'Done'), 'failed' => array('danger', 'Failed'), 'skipped' => array('secondary', 'Skipped'), 'running' => array('secondary', 'Started'));
                 echo '<table class="table table-sm"><tbody>';
                 foreach ($steps as $st) {
                     $b = isset($badges[$st['state']]) ? $badges[$st['state']] : array('secondary', $st['state']);
@@ -476,8 +484,23 @@ if ($_SESSION['authenticated'] == 1) {
     ?>
     <p>
 
-    <form method='POST' name="update" action="." onSubmit = "return confirm('Update the feeder?')">
+    <script type="text/javascript">
+    function confirmUpdate() {
+        if (!document.querySelector('form[name="update"] input[type="checkbox"]:checked')) {
+            alert('Tick at least one component to update.');
+            return false;
+        }
+        return confirm('Update the feeder?');
+    }
+    </script>
+    <form method='POST' name="update" action="." onSubmit = "return confirmUpdate()">
     <input type="hidden" id="update" name="update" value="update">
+    <div class="mb-2">
+      <label class="me-3"><input type="checkbox" name="components[]" value="readsb" checked> readsb (ADS-B decoder)</label>
+      <label class="me-3"><input type="checkbox" name="components[]" value="mlat-client" checked> mlat-client</label>
+      <label class="me-3"><input type="checkbox" name="components[]" value="tar1090" checked> tar1090 (map)</label>
+      <label class="me-3"><input type="checkbox" name="components[]" value="web-ui" checked> Web UI</label>
+    </div>
     <input type="submit" class="btn btn-primary" value="Update Feeder">
     </form>
     <p>

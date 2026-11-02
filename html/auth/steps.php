@@ -1,5 +1,5 @@
 <?php
-// Progress markers written by the update scripts: "== step <id> <start|ok|failed> (<time>)[: <message>]"
+// Progress markers written by the update scripts: "== step <id> <start|ok|failed|skipped> (<time>)[: <message>]"
 
 function update_step_label($id) {
     $labels = array(
@@ -18,12 +18,12 @@ function update_step_label($id) {
     return isset($labels[$id]) ? $labels[$id] : $id;
 }
 
-// Returns the steps in the order they started: id, label, state (running, ok, failed), started, finished, message.
+// Returns the steps in the order they started: id, label, state (running, ok, failed, skipped), started, finished, message.
 // When $finished is true, a step that never reported ok or failed is marked failed.
 function parse_update_steps($lines, $finished) {
     $steps = array();
     foreach ($lines as $line) {
-        if (!preg_match('/^== step (\S+) (start|ok|failed)(?: \((\d\d:\d\d:\d\d)\))?(?:: (.*))?$/', trim($line), $m)) {
+        if (!preg_match('/^== step (\S+) (start|ok|failed|skipped)(?: \((\d\d:\d\d:\d\d)\))?(?:: (.*))?$/', trim($line), $m)) {
             continue;
         }
         $id = $m[1];
@@ -32,6 +32,9 @@ function parse_update_steps($lines, $finished) {
         if ($m[2] === 'start') {
             $steps[$id] = array('id' => $id, 'label' => update_step_label($id), 'state' => 'running',
                                 'started' => $time, 'finished' => '', 'message' => '');
+        } elseif ($m[2] === 'skipped') {
+            $steps[$id] = array('id' => $id, 'label' => update_step_label($id), 'state' => 'skipped',
+                                'started' => '', 'finished' => $time, 'message' => $message);
         } elseif (isset($steps[$id])) {
             $steps[$id]['state'] = $m[2];
             $steps[$id]['finished'] = $time;

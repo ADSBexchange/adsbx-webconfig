@@ -31,9 +31,27 @@ write_result() {
     local after markers
     after=$("$status_helper" 2>/dev/null)
     markers=$(grep '^== step ' "$log" | sed 's/\\/\\\\/g; s/"/\\"/g' | awk '{printf "%s\"%s\"", (NR > 1 ? "," : ""), $0}')
-    printf '{"started":"%s","finished":"%s","result":"%s","before":%s,"after":%s,"markers":[%s]}\n' \
-        "$started" "$(date -Is)" "$1" "${before:-null}" "${after:-null}" "$markers" > "$result_file"
+    printf '{"started":"%s","finished":"%s","result":"%s","components":"%s","before":%s,"after":%s,"markers":[%s]}\n' \
+        "$started" "$(date -Is)" "$1" "${components:-all}" "${before:-null}" "${after:-null}" "$markers" > "$result_file"
 }
+
+# components ticked on the update page: subset of readsb,mlat-client,tar1090,web-ui; no file = everything
+components_file=/tmp/webconfig/update-components
+components=$(tr -d '[:space:]' < "$components_file" 2>/dev/null)
+rm -f "$components_file"
+feed_components=
+want_web_ui=yes
+if [[ -n $components ]]; then
+    want_web_ui=no
+    for c in ${components//,/ }; do
+        case $c in
+            readsb|mlat-client|tar1090) feed_components+=${feed_components:+,}$c ;;
+            web-ui) want_web_ui=yes ;;
+        esac
+    done
+    export ADSBX_UPDATE_COMPONENTS=$feed_components
+    echo "Updating: $components"
+fi
 
 failed=0
 # run_script <step-id> <url>: downloads the script and runs it; a failed download or run marks the update failed
@@ -52,8 +70,16 @@ run_script() {
         step "$1" ok
     fi
 }
-run_script feed-software https://raw.githubusercontent.com/ADSBexchange/adsbx-update/main/update-adsbx.sh
-run_script web-ui https://raw.githubusercontent.com/ADSBexchange/adsbx-webconfig/master/update-webconfig.sh
+if [[ -z $components || -n $feed_components ]]; then
+    run_script feed-software https://raw.githubusercontent.com/ADSBexchange/adsbx-update/main/update-adsbx.sh
+else
+    step feed-software skipped
+fi
+if [[ $want_web_ui == yes ]]; then
+    run_script web-ui https://raw.githubusercontent.com/ADSBexchange/adsbx-webconfig/master/update-webconfig.sh
+else
+    step web-ui skipped
+fi
 
 if [[ $failed != 0 ]]; then
     write_result failed

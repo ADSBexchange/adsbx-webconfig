@@ -66,7 +66,7 @@ done
 
 rm -rf /adsbexchange/update
 mkdir -p /adsbexchange
-git clone --depth 1 https://github.com/ADSBexchange/adsbx-update.git /adsbexchange/update
+git clone --depth 1 -b release/8.x https://github.com/ADSBexchange/adsbx-update.git /adsbexchange/update
 
 pushd /adsbexchange/update/
 # always copy over this file

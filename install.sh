@@ -85,6 +85,35 @@ rm -rf $ipath/helpers
 cp -r -T ./helpers $ipath/helpers
 chmod a+x $ipath/helpers/*.sh
 
+# automatic security updates: installed and configured here, enabled only from the update page
+first_auto_updates=no
+[[ -f /etc/apt/apt.conf.d/52-adsbx-unattended-upgrades ]] || first_auto_updates=yes
+aptInstall unattended-upgrades
+cat > /etc/apt/apt.conf.d/52-adsbx-unattended-upgrades <<'EOF'
+// Written by the ADS-B Exchange web UI installer: Debian security updates only, no automatic
+// reboot, kernel/firmware/network packages left alone. Turned on or off from the update page.
+#clear Unattended-Upgrade::Origins-Pattern;
+Unattended-Upgrade::Origins-Pattern {
+    "origin=Debian,codename=${distro_codename}-security,label=Debian-Security";
+    "origin=Debian,codename=${distro_codename},label=Debian-Security";
+};
+#clear Unattended-Upgrade::Package-Blacklist;
+Unattended-Upgrade::Package-Blacklist {
+    "linux-image-";
+    "raspberrypi-";
+    "rpi-eeprom";
+    "network-manager";
+};
+Unattended-Upgrade::Automatic-Reboot "false";
+Unattended-Upgrade::MinimalSteps "true";
+Unattended-Upgrade::Remove-Unused-Dependencies "false";
+Unattended-Upgrade::Remove-New-Unused-Dependencies "false";
+Unattended-Upgrade::Remove-Unused-Kernel-Packages "false";
+EOF
+if [[ $first_auto_updates == yes ]]; then
+    bash $ipath/helpers/auto-updates.sh disable
+fi
+
 # record which checkout is installed, for the software status on the update page
 {
     echo "branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo unknown)"

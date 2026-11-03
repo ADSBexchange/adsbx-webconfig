@@ -12,6 +12,7 @@ step() {
 }
 
 # This is required for low memory devices, else apt update locks
+[[ -f /var/swap ]] || sudo dphys-swapfile setup
 sudo dphys-swapfile swapon
 
 step apt-update start

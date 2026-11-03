@@ -227,7 +227,7 @@ if (!empty($_POST["newpassword1"])) {
         }
         ?>
         <!-- Progress -->
-        <table class="table table-sm" id="steps-table" style="display: none;"><thead><tr><th>Step</th><th>Status</th><th></th></tr></thead><tbody></tbody></table>
+        <div class="col-6"><table class="table table-sm table-dark" id="steps-table" style="display: none;"><thead><tr><th>Step</th><th>Status</th><th></th></tr></thead><tbody></tbody></table></div>
         <p id="steps-summary"></p>
         <!-- Output Window -->
         <table><tr><td>
@@ -378,13 +378,13 @@ if ($_SESSION['authenticated'] == 1) {
     $status = json_decode((string) shell_exec('sudo /adsbexchange/webconfig/helpers/update-status.sh 2>/dev/null'), true);
     if (is_array($status) && isset($status['components'])) {
         echo '<p class="mb-1">' . htmlspecialchars((string) $status['os']) . ', image ' . htmlspecialchars((string) $status['image']) . '</p>';
-        echo '<table class="table table-sm" id="software-table"><thead><tr><th>Component</th><th>Installed</th><th>Available</th><th>Status</th></tr></thead><tbody>';
+        echo '<div class="col-6"><table class="table table-sm table-dark" id="software-table"><thead><tr><th>Component</th><th>Installed</th><th>Available</th><th>Status</th></tr></thead><tbody>';
         foreach ($status['components'] as $c) {
             echo '<tr data-id="' . htmlspecialchars((string) $c['id']) . '"><td>' . htmlspecialchars((string) $c['name']) . '</td>'
                . '<td>' . htmlspecialchars((string) ($c['installed'] !== '' ? $c['installed'] : 'unknown')) . '</td>'
                . '<td class="available">-</td><td class="status">-</td></tr>';
         }
-        echo '</tbody></table>';
+        echo '</tbody></table></div>';
     } else {
         echo '<p>Software status is not available.</p>';
     }
@@ -414,13 +414,13 @@ if ($_SESSION['authenticated'] == 1) {
             $steps = parse_update_steps($last['markers'], true);
             if ($steps) {
                 $badges = array('ok' => array('success', 'Done'), 'failed' => array('danger', 'Failed'), 'skipped' => array('secondary', 'Skipped'), 'running' => array('secondary', 'Started'));
-                echo '<table class="table table-sm"><tbody>';
+                echo '<div class="col-6"><table class="table table-sm table-dark"><tbody>';
                 foreach ($steps as $st) {
                     $b = isset($badges[$st['state']]) ? $badges[$st['state']] : array('secondary', $st['state']);
                     echo '<tr><td>' . htmlspecialchars($st['label']) . '</td><td><span class="badge bg-' . $b[0] . '">' . $b[1] . '</span></td>'
                        . '<td>' . htmlspecialchars((string) $st['message']) . '</td></tr>';
                 }
-                echo '</tbody></table>';
+                echo '</tbody></table></div>';
             }
         }
     }

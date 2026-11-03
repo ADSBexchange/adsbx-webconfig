@@ -58,7 +58,12 @@ tar1090_date=$(git -C "$tar1090_dir" log -1 --date=short --format=%cd 2>/dev/nul
 tar1090_url=$(git -C "$tar1090_dir" remote get-url origin 2>/dev/null)
 tar1090_url=${tar1090_url:-https://github.com/wiedehopf/tar1090}
 tar1090_branch=$(git -C "$tar1090_dir" rev-parse --abbrev-ref HEAD 2>/dev/null)
-components+=("$(component tar1090 "tar1090 (map)" "${tar1090_ref:+${tar1090_ref:0:7} $tar1090_date}" "$tar1090_ref" "$(remote "$tar1090_url" "refs/heads/${tar1090_branch:-master}")" "$tar1090_url ${tar1090_branch:-master}")")
+tar1090_installed=${tar1090_ref:+${tar1090_ref:0:7} $tar1090_date}
+# without the checkout, the installer's version file still names the installed release
+if [[ -z $tar1090_installed ]]; then
+    tar1090_installed=$(sed -n 's/.*"tar1090Version": *"\([^"]*\)".*/\1/p' /usr/local/share/tar1090/html/version.json 2>/dev/null)
+fi
+components+=("$(component tar1090 "tar1090 (map)" "$tar1090_installed" "$tar1090_ref" "$(remote "$tar1090_url" "refs/heads/${tar1090_branch:-master}")" "$tar1090_url ${tar1090_branch:-master}")")
 
 webconfig_branch=; webconfig_ref=; webconfig_installed=
 if [[ -r /adsbexchange/webconfig/version ]]; then

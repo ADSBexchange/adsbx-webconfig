@@ -28,7 +28,13 @@ bash install.sh dont_reset_config
 cd /tmp
 rm -rf $updir
 
-echo "8.2.$(date '+%y%m%d')" > /boot/adsbx-version-webconfig
+if [[ -r /adsbexchange/webconfig/version ]]; then
+    branch=$(sed -n 's/^branch=//p' /adsbexchange/webconfig/version)
+    commit=$(sed -n 's/^commit=//p' /adsbexchange/webconfig/version)
+    echo "${branch} ${commit:0:7} $(date '+%Y-%m-%d')" > /boot/adsbx-version-webconfig
+else
+    date '+%Y-%m-%d' > /boot/adsbx-version-webconfig
+fi
 
 echo '--------------------------------------------'
 echo '        update-webconfig complete.          '

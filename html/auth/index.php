@@ -380,8 +380,22 @@ if ($_SESSION['authenticated'] == 1) {
         echo '<p class="mb-1">' . htmlspecialchars((string) $status['os']) . ', image ' . htmlspecialchars((string) $status['image']) . '</p>';
         echo '<div class="col-6"><table class="table table-sm table-dark" id="software-table"><thead><tr><th>Component</th><th>Installed</th><th>Available</th><th>Status</th></tr></thead><tbody>';
         foreach ($status['components'] as $c) {
-            echo '<tr data-id="' . htmlspecialchars((string) $c['id']) . '"><td>' . htmlspecialchars((string) $c['name']) . '</td>'
-               . '<td>' . htmlspecialchars((string) ($c['installed'] !== '' ? $c['installed'] : 'unknown')) . '</td>'
+            $repo = isset($c['repo']) ? (string) $c['repo'] : '';
+            $branch = isset($c['branch']) ? (string) $c['branch'] : '';
+            $ref = isset($c['installed_ref']) ? (string) $c['installed_ref'] : '';
+            $github = strpos($repo, 'github.com') !== false;
+            $name = htmlspecialchars((string) $c['name']);
+            if ($repo !== '') {
+                $href = $github && $branch !== '' ? $repo . '/tree/' . $branch : $repo;
+                $name = '<a href="' . htmlspecialchars($href) . '" target="_blank" rel="noopener">' . $name . '</a>';
+            }
+            $installed = htmlspecialchars((string) ($c['installed'] !== '' ? $c['installed'] : 'unknown'));
+            if ($github && preg_match('/^[0-9a-f]{7,40}$/', $ref)) {
+                $short = substr($ref, 0, 7);
+                $installed = str_replace($short, '<a href="' . htmlspecialchars($repo . '/commit/' . $ref) . '" target="_blank" rel="noopener">' . $short . '</a>', $installed);
+            }
+            echo '<tr data-id="' . htmlspecialchars((string) $c['id']) . '" data-repo="' . htmlspecialchars($repo) . '"><td>' . $name . '</td>'
+               . '<td>' . $installed . '</td>'
                . '<td class="available">-</td><td class="status">-</td></tr>';
         }
         echo '</tbody></table></div>';
@@ -443,7 +457,14 @@ if ($_SESSION['authenticated'] == 1) {
                 var row = document.querySelector('#software-table tr[data-id="' + c.id + '"]');
                 if (!row) { return; }
                 var ref = c.available_ref || '';
-                row.querySelector('.available').textContent = ref === '' ? 'unknown' : (/^[0-9a-f]{40}$/.test(ref) ? ref.substring(0, 7) : ref);
+                var cell = row.querySelector('.available');
+                var repo = c.repo || row.getAttribute('data-repo') || '';
+                cell.textContent = ref === '' ? 'unknown' : ref;
+                if (/^[0-9a-f]{40}$/.test(ref) && repo.indexOf('github.com') !== -1) {
+                    var a = document.createElement('a');
+                    a.href = repo + '/commit/' + ref; a.target = '_blank'; a.rel = 'noopener'; a.textContent = ref.substring(0, 7);
+                    cell.textContent = ''; cell.appendChild(a);
+                }
                 var l = labels[c.status] || labels['unknown'];
                 row.querySelector('.status').innerHTML = '<span class="badge bg-' + l[0] + '">' + l[1] + '</span>';
                 if (c.status === 'update-available') { pending++; }

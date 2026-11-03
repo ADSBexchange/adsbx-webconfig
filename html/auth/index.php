@@ -418,7 +418,7 @@ if ($_SESSION['authenticated'] == 1) {
                                . ' &rarr; ' . htmlspecialchars((string) $c['installed']);
                 }
             }
-            echo $changes ? '<ul class="mb-1"><li>' . implode('</li><li>', $changes) . '</li></ul>' : '<p class="mb-1">No component changed.</p>';
+            echo $changes ? '<ul class="list-unstyled mb-1"><li>' . implode('</li><li>', $changes) . '</li></ul>' : '<p class="mb-1">No component changed.</p>';
         }
         if (isset($last['markers']) && is_array($last['markers'])) {
             require_once __DIR__ . '/steps.php';

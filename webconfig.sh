@@ -168,7 +168,14 @@ echo ------------- > /dev/tty1
 #wpa_cli select_network $netnum
 #wpa_cli enable_network $netnum
 
-nmcli connection up adsbx-config
+# current Raspberry Pi OS images keep the radio off until a country is set; the setup network
+# runs on the 2.4 GHz channels the world regulatory domain allows
+rfkill unblock wifi 2>/dev/null
+nmcli radio wifi on 2>/dev/null
+for i in {1..6}; do
+    nmcli connection up adsbx-config && break
+    sleep 5
+done
 
 # do the wifi can after selecting / enabling the config network as it can be unreliable otherwise
 wifi_scan

@@ -52,6 +52,10 @@ mlat_ref=$(cat /usr/local/share/adsbexchange/mlat_version /mlat_version 2>/dev/n
 mlat_url=https://github.com/adsbexchange/mlat-client.git
 components+=("$(component mlat-client "mlat-client" "${mlat_version:-unknown}${mlat_ref:+ ${mlat_ref:0:7}}" "$mlat_ref" "$(remote "$mlat_url" HEAD)" "$mlat_url" "${mlat_url%.git}" "")")
 
+stats_ref=$(head -n 1 /usr/local/share/adsbexchange-stats/version 2>/dev/null)
+stats_url=https://github.com/adsbexchange/adsbexchange-stats.git
+components+=("$(component stats "Stats client" "${stats_ref:0:7}" "$stats_ref" "$(remote "$stats_url" refs/heads/master)" "$stats_url master" "${stats_url%.git}" "master")")
+
 tar1090_dir=/usr/local/share/tar1090/git
 tar1090_ref=$(git -C "$tar1090_dir" rev-parse HEAD 2>/dev/null)
 tar1090_date=$(git -C "$tar1090_dir" log -1 --date=short --format=%cd 2>/dev/null)
